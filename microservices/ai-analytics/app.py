@@ -572,11 +572,11 @@ async def predict_system_health():
             cpu_score = max(0, 1 - (avg_cpu / 100))
             health_scores.append(cpu_score)
             
-            if avg_cpu > 80:
+            if avg_cpu > 70:
                 predicted_issues.append({
                     'type': 'high_cpu_usage',
                     'severity': 'high',
-                    'description': f'CPU usage is {avg_cpu:.1f}%, above 80% threshold',
+                    'description': f'CPU usage is {avg_cpu:.1f}%, above 70% threshold',
                     'affected_services': cpu_metrics['service'].unique().tolist()
                 })
                 recommendations.append('Scale horizontally or optimize CPU-intensive operations')
