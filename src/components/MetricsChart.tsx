@@ -30,6 +30,8 @@ const MetricsChart: React.FC<MetricsChartProps> = ({
         return { bg: 'bg-yellow-100', bar: 'bg-yellow-500' };
       case 'red':
         return { bg: 'bg-red-100', bar: 'bg-red-500' };
+      case 'purple':
+        return { bg: 'bg-purple-100', bar: 'bg-purple-500' };
       default:
         return { bg: 'bg-gray-100', bar: 'bg-gray-500' };
     }
@@ -37,6 +39,8 @@ const MetricsChart: React.FC<MetricsChartProps> = ({
 
   const colors = getColorClasses(color);
   const latestValue = data[data.length - 1]?.value || 0;
+  const trend = data.length > 1 ? 
+    ((latestValue - data[data.length - 2].value) / data[data.length - 2].value * 100) : 0;
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -46,11 +50,13 @@ const MetricsChart: React.FC<MetricsChartProps> = ({
           <div className="text-2xl font-bold text-gray-900">
             {latestValue.toFixed(unit === 'ms' ? 0 : 2)}{unit}
           </div>
-          <div className="text-sm text-gray-500">Current</div>
+          <div className={`text-sm ${trend > 0 ? 'text-red-500' : trend < 0 ? 'text-green-500' : 'text-gray-500'}`}>
+            {trend !== 0 && (trend > 0 ? '↑' : '↓')} {Math.abs(trend).toFixed(1)}%
+          </div>
         </div>
       </div>
       
-      <div className="h-48 flex items-end space-x-1">
+      <div className="h-48 flex items-end space-x-1 relative">
         {data.map((point, index) => {
           const height = Math.max((point.value / maxValue) * 100, 2);
           return (
@@ -71,10 +77,19 @@ const MetricsChart: React.FC<MetricsChartProps> = ({
             </div>
           );
         })}
+        
+        {/* Real-time indicator */}
+        <div className="absolute top-2 right-2">
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-xs text-gray-500">Live</span>
+          </div>
+        </div>
       </div>
       
       <div className="flex justify-between text-xs text-gray-500 mt-2">
         <span>{data.length > 0 ? new Date(data[0].timestamp).toLocaleTimeString() : ''}</span>
+        <span className="text-green-600 font-medium">Real-time data</span>
         <span>Now</span>
       </div>
     </div>

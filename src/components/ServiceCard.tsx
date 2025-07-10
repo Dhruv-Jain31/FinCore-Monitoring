@@ -9,6 +9,12 @@ interface ServiceCardProps {
   responseTime: number;
   errorRate: number;
   description: string;
+  metrics: {
+    cpu: number;
+    memory: number;
+    requests_per_second: number;
+    active_connections: number;
+  };
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({
@@ -18,7 +24,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   uptime,
   responseTime,
   errorRate,
-  description
+  description,
+  metrics
 }) => {
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -75,6 +82,39 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </div>
       </div>
 
+      {/* Real-time metrics */}
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{metrics.cpu.toFixed(1)}%</div>
+              <div className="text-xs text-gray-500">CPU</div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{metrics.memory.toFixed(1)}%</div>
+              <div className="text-xs text-gray-500">Memory</div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{metrics.requests_per_second.toFixed(0)}</div>
+              <div className="text-xs text-gray-500">Req/s</div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{metrics.active_connections}</div>
+              <div className="text-xs text-gray-500">Connections</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="mt-4 pt-4 border-t border-gray-100">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-500">Endpoint:</span>
