@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Activity, TrendingUp, Users, DollarSign, AlertCircle, CheckCircle, XCircle, Clock, Server, Database, Zap, MessageCircle, X, Send, BarChart3, Cpu, MemoryStick as Memory, Network } from 'lucide-react';
 import MetricsChart from './components/MetricsChart';
 import ServiceCard from './components/ServiceCard';
@@ -188,175 +189,86 @@ const App: React.FC = () => {
 
   // Simulate real-time data updates
   useEffect(() => {
-    const generateRealtimeData = () => {
-      const now = new Date();
-      
-      // Generate realistic service data with some variability
-      const mockServices: ServiceStatus[] = [
-        {
-          name: 'Payments Service',
-          status: Math.random() > 0.95 ? 'warning' : 'healthy',
-          url: 'http://localhost:8001',
-          uptime: (99.9 - Math.random() * 0.2).toFixed(2) + '%',
-          responseTime: Math.floor(40 + Math.random() * 20),
-          errorRate: Math.random() * 0.02,
-          description: 'Handles instant payments and transactions',
-          metrics: {
-            cpu: 15 + Math.random() * 10,
-            memory: 45 + Math.random() * 15,
-            requests_per_second: 120 + Math.random() * 40,
-            active_connections: Math.floor(40 + Math.random() * 20)
-          }
-        },
-        {
-          name: 'Investments Service',
-          status: Math.random() > 0.98 ? 'warning' : 'healthy',
-          url: 'http://localhost:8002',
-          uptime: (99.8 - Math.random() * 0.3).toFixed(2) + '%',
-          responseTime: Math.floor(45 + Math.random() * 25),
-          errorRate: Math.random() * 0.025,
-          description: 'Personalized investment tracking and portfolio management',
-          metrics: {
-            cpu: 20 + Math.random() * 15,
-            memory: 55 + Math.random() * 20,
-            requests_per_second: 80 + Math.random() * 30,
-            active_connections: Math.floor(20 + Math.random() * 15)
-          }
-        },
-        {
-          name: 'Accounts Service',
-          status: Math.random() > 0.92 ? 'warning' : 'healthy',
-          url: 'http://localhost:8003',
-          uptime: (99.5 - Math.random() * 0.4).toFixed(2) + '%',
-          responseTime: Math.floor(50 + Math.random() * 35),
-          errorRate: Math.random() * 0.04,
-          description: 'Automated account services and customer management',
-          metrics: {
-            cpu: 25 + Math.random() * 20,
-            memory: 40 + Math.random() * 25,
-            requests_per_second: 60 + Math.random() * 25,
-            active_connections: Math.floor(15 + Math.random() * 10)
-          }
-        }
-      ];
+  const serviceConfigs = [
+    { name: 'Payments Service', url: 'http://localhost:8001', description: 'Handles instant payments and transactions' },
+    { name: 'Investments Service', url: 'http://localhost:8002', description: 'Personalized investment tracking and portfolio management' },
+    { name: 'Accounts Service', url: 'http://localhost:8003', description: 'Automated account services and customer management' }
+  ];
 
-      // Generate system overview with realistic fluctuations
-      const mockSystemOverview: SystemOverview = {
-        totalRequests: 125430 + Math.floor(Math.random() * 100),
-        activeConnections: 342 + Math.floor(Math.random() * 50 - 25),
-        totalAccounts: 15678 + Math.floor(Math.random() * 10),
-        portfolioValue: 2450000 + Math.floor(Math.random() * 50000 - 25000),
-        paymentsProcessed: 89234 + Math.floor(Math.random() * 20),
-        errorRate: 0.028 + (Math.random() * 0.01 - 0.005)
-      };
+  const fetchServiceHealth = async () => {
+    setIsLoading(true);
+    const now = new Date();
+    const newServices: ServiceStatus[] = [];
 
-      // Generate alerts with some probability
-      const existingAlerts = alerts.filter(a => !a.resolved);
-      const newAlerts = [...existingAlerts];
-      
-      if (Math.random() > 0.95 && newAlerts.length < 5) {
-        const alertTypes = ['warning', 'critical', 'info'] as const;
-        const services = ['Payments Service', 'Investments Service', 'Accounts Service'];
-        const messages = [
-          'High latency detected - 95th percentile above threshold',
-          'Memory usage approaching limit',
-          'Unusual traffic pattern detected',
-          'Database connection pool exhausted',
-          'Rate limiting activated'
-        ];
-        
-        newAlerts.push({
-          id: Date.now().toString(),
-          service: services[Math.floor(Math.random() * services.length)],
-          type: alertTypes[Math.floor(Math.random() * alertTypes.length)],
-          message: messages[Math.floor(Math.random() * messages.length)],
-          timestamp: now.toISOString(),
-          resolved: false
+    for (const config of serviceConfigs) {
+      try {
+        const response = await axios.get(`${config.url}/health`);
+        const data = response.data;
+
+        newServices.push({
+          name: config.name,
+          url: config.url,
+          description: config.description,
+          status: data.status || 'healthy',
+          uptime: data.uptime || '99.99%',
+          responseTime: data.responseTime || 0,
+          errorRate: data.errorRate || 0,
+          metrics: data.metrics || {
+            cpu: 0,
+            memory: 0,
+            requests_per_second: 0,
+            active_connections: 0
+          }
+        });
+      } catch (error) {
+        newServices.push({
+          name: config.name,
+          url: config.url,
+          description: config.description,
+          status: 'error',
+          uptime: 'N/A',
+          responseTime: 0,
+          errorRate: 1,
+          metrics: {
+            cpu: 0,
+            memory: 0,
+            requests_per_second: 0,
+            active_connections: 0
+          }
         });
       }
+    }
 
-      // Resolve some alerts randomly
-      newAlerts.forEach(alert => {
-        if (!alert.resolved && Math.random() > 0.98) {
-          alert.resolved = true;
-        }
-      });
+    setServices(newServices);
 
-      setServices(mockServices);
-      setSystemOverview(mockSystemOverview);
-      setAlerts(newAlerts);
-      setLastUpdate(now);
-    };
+    // Aggregate system overview
+    const totalRequests = newServices.reduce((acc, s) => acc + s.metrics.requests_per_second * 60, 0);
+    const activeConnections = newServices.reduce((acc, s) => acc + s.metrics.active_connections, 0);
+    const totalAccounts = newServices.find(s => s.name === 'Accounts Service')?.metrics.requests_per_second ?? 0;
+    const portfolioValue = newServices.find(s => s.name === 'Investments Service')?.metrics.requests_per_second ?? 0;
+    const paymentsProcessed = newServices.find(s => s.name === 'Payments Service')?.metrics.requests_per_second ?? 0;
+    const errorRate = newServices.reduce((acc, s) => acc + s.errorRate, 0) / newServices.length;
 
-    // Generate metrics data
-    const generateMetricsData = () => {
-      const now = new Date();
-      const newMetrics = { ...metrics };
+    setSystemOverview({
+      totalRequests,
+      activeConnections,
+      totalAccounts,
+      portfolioValue,
+      paymentsProcessed,
+      errorRate
+    });
 
-      // Update existing metrics or create new ones
-      const metricTypes = ['requestRate', 'responseTime', 'errorRate', 'memoryUsage', 'cpuUsage'];
-      
-      metricTypes.forEach(metricType => {
-        if (!newMetrics[metricType]) {
-          newMetrics[metricType] = [];
-        }
-
-        // Add new data point
-        let baseValue, variance;
-        switch (metricType) {
-          case 'requestRate':
-            baseValue = 150;
-            variance = 30;
-            break;
-          case 'responseTime':
-            baseValue = 50;
-            variance = 20;
-            break;
-          case 'errorRate':
-            baseValue = 0.02;
-            variance = 0.01;
-            break;
-          case 'memoryUsage':
-            baseValue = 65;
-            variance = 10;
-            break;
-          case 'cpuUsage':
-            baseValue = 25;
-            variance = 15;
-            break;
-          default:
-            baseValue = 50;
-            variance = 10;
-        }
-
-        newMetrics[metricType].push({
-          timestamp: now.toISOString(),
-          value: Math.max(0, baseValue + Math.random() * variance - variance / 2)
-        });
-
-        // Keep only last 20 data points
-        if (newMetrics[metricType].length > 20) {
-          newMetrics[metricType] = newMetrics[metricType].slice(-20);
-        }
-      });
-
-      setMetrics(newMetrics);
-    };
-
-    // Initial data load
-    generateRealtimeData();
-    generateMetricsData();
+    setLastUpdate(now);
     setIsLoading(false);
+  };
 
-    // Set up real-time updates
-    const dataInterval = setInterval(generateRealtimeData, 5000); // Update every 5 seconds
-    const metricsInterval = setInterval(generateMetricsData, 3000); // Update metrics every 3 seconds
+  // Initial call
+  fetchServiceHealth();
 
-    return () => {
-      clearInterval(dataInterval);
-      clearInterval(metricsInterval);
-    };
-  }, []);
+  // Polling every 5 seconds
+  const interval = setInterval(fetchServiceHealth, 60000);
+  return () => clearInterval(interval);
+}, []);
 
   // Utility functions
   const formatNumber = (num: number): string => {

@@ -439,6 +439,58 @@
       "title": "Error Rates",
       "type": "timeseries"
     }
+    ,
+{
+  "datasource": "Prometheus",
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "mappings": [],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      }
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 24
+  },
+  "id": 6,
+  "options": {
+    "legend": {
+      "displayMode": "list",
+      "placement": "bottom"
+    },
+    "tooltip": {
+      "mode": "single"
+    }
+  },
+  "targets": [
+    {
+      "expr": "sum by (type) (rate(ai_analytics_predictions_total[5m]))",
+      "legendFormat": "{{type}}",
+      "refId": "A"
+    }
+  ],
+  "title": "AI Predictions by Type",
+  "type": "timeseries"
+}
+
   ],
   "schemaVersion": 27,
   "style": "dark",
@@ -453,6 +505,7 @@
     "from": "now-1h",
     "to": "now"
   },
+
   "timepicker": {},
   "timezone": "",
   "title": "FinCore Microservices Overview",
